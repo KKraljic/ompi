@@ -102,6 +102,22 @@ ompi_coll_offloaded_comm_query(struct ompi_communicator_t *comm, int *priority)
 
     offloaded_module->super.coll_allreduce  = ompi_coll_offloaded_allreduce_intra_dec_fixed;
     offloaded_module->super.coll_reduce     = ompi_coll_offloaded_reduce_intra_dec_fixed;
+
+    offloaded_module->super.coll_allgather  = NULL;
+    offloaded_module->super.coll_allgatherv = NULL;
+    offloaded_module->super.coll_alltoall   = NULL;
+    offloaded_module->super.coll_alltoallv  = NULL;
+    offloaded_module->super.coll_alltoallw  = NULL;
+    offloaded_module->super.coll_barrier    = NULL;
+    offloaded_module->super.coll_bcast      = NULL;
+    offloaded_module->super.coll_exscan     = NULL;
+    offloaded_module->super.coll_gather     = NULL;
+    offloaded_module->super.coll_gatherv    = NULL;
+    offloaded_module->super.coll_reduce_scatter = NULL;
+    offloaded_module->super.coll_reduce_scatter_block = NULL;
+    offloaded_module->super.coll_scan       = NULL;
+    offloaded_module->super.coll_scatter    = NULL;
+    offloaded_module->super.coll_scatterv   = NULL;
     return &(offloaded_module->super);
 }
 
