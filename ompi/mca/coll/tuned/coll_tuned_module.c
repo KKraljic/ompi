@@ -34,6 +34,8 @@
 #include "coll_tuned_dynamic_rules.h"
 #include "coll_tuned_dynamic_file.h"
 
+#include "../../../include/debugging_macros.h"
+
 static int tuned_module_enable(mca_coll_base_module_t *module,
                    struct ompi_communicator_t *comm);
 /*
@@ -44,6 +46,7 @@ static int tuned_module_enable(mca_coll_base_module_t *module,
 int ompi_coll_tuned_init_query(bool enable_progress_threads,
                                bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     return OMPI_SUCCESS;
 }
 

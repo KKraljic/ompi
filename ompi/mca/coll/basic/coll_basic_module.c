@@ -33,6 +33,7 @@
 #include "ompi/mca/coll/base/base.h"
 #include "coll_basic.h"
 
+#include "../../../include/debugging_macros.h"
 
 /*
  * Initial query function that is invoked during MPI_INIT, allowing
@@ -44,7 +45,7 @@ mca_coll_basic_init_query(bool enable_progress_threads,
                           bool enable_mpi_threads)
 {
     /* Nothing to do */
-
+    PRINT_DEBUG;
     return OMPI_SUCCESS;
 }
 

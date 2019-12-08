@@ -109,6 +109,7 @@ int ompi_coll_offloaded_reduce_intra_dec_fixed( const void *sendbuf, void *recvb
                                             struct ompi_communicator_t* comm,
                                             mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int communicator_size, segsize = 0;
     size_t message_size, dsize;
     const double a1 =  0.6016 / 1024.0; /* [1/B] */
@@ -257,12 +258,13 @@ ompi_coll_offloaded_allreduce_intra_recursivedoubling(const void *sbuf, void *rb
                                                       struct ompi_communicator_t *comm,
                                                       mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int ret, line, rank, size, adjsize, remote, distance;
     int newrank, newremote, extra_ranks;
     char *tmpsend = NULL, *tmprecv = NULL, *tmpswap = NULL, *inplacebuf_free = NULL, *inplacebuf;
     ptrdiff_t span, gap = 0;
 
-    PRINT_DEBUG;
+
     size = ompi_comm_size(comm);
     rank = ompi_comm_rank(comm);
 

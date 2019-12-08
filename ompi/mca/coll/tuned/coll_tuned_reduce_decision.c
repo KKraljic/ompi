@@ -25,6 +25,8 @@
 #include "ompi/op/op.h"
 #include "coll_tuned.h"
 
+#include "../../../include/debugging_macros.h"
+
 /* reduce algorithm variables */
 static int coll_tuned_reduce_forced_algorithm = 0;
 static int coll_tuned_reduce_segment_size = 0;
@@ -59,6 +61,7 @@ static mca_base_var_enum_value_t reduce_algorithms[] = {
 
 int ompi_coll_tuned_reduce_intra_check_forced_init (coll_tuned_force_algorithm_mca_param_indices_t *mca_param_indices)
 {
+    PRINT_DEBUG;
     mca_base_var_enum_t*new_enum;
     int cnt;
 
@@ -151,6 +154,7 @@ int ompi_coll_tuned_reduce_intra_do_this(const void *sbuf, void* rbuf, int count
                                          int algorithm, int faninout,
                                          int segsize, int max_requests )
 {
+    PRINT_DEBUG;
     OPAL_OUTPUT((ompi_coll_tuned_stream,"coll:tuned:reduce_intra_do_this selected algorithm %d topo faninout %d segsize %d",
                  algorithm, faninout, segsize));
 

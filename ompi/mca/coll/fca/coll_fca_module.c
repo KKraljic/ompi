@@ -13,6 +13,7 @@
  */
 
 #include "coll_fca.h"
+#include "../../../include/debugging_macros.h"
 
 /*
  * Initial query function that is invoked during MPI_INIT, allowing
@@ -35,6 +36,7 @@ int modular_pow(uint64_t base, uint64_t exponent, uint64_t modulus)
 int mca_coll_fca_init_query(bool enable_progress_threads,
                             bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     return OMPI_SUCCESS;
 }
 

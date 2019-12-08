@@ -40,6 +40,8 @@
 #include "ompi/mca/coll/base/base.h"
 #include "coll_sync.h"
 
+#include "../../../include/debugging_macros.h"
+
 
 static void mca_coll_sync_module_construct(mca_coll_sync_module_t *module)
 {
@@ -80,6 +82,7 @@ OBJ_CLASS_INSTANCE(mca_coll_sync_module_t, mca_coll_base_module_t,
 int mca_coll_sync_init_query(bool enable_progress_threads,
                              bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     /* Nothing to do */
     return OMPI_SUCCESS;
 }

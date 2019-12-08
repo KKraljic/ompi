@@ -15,6 +15,7 @@
 #include "ompi_config.h"
 #include "coll_hcoll.h"
 #include "coll_hcoll_dtypes.h"
+#include "../../../include/debugging_macros.h"
 
 int hcoll_comm_attr_keyval;
 int hcoll_type_attr_keyval;
@@ -25,6 +26,7 @@ mca_coll_hcoll_dtype_t zero_dte_mapping;
  */
 int mca_coll_hcoll_init_query(bool enable_progress_threads, bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
 #if HCOLL_API < HCOLL_VERSION(3,2)
     if (enable_mpi_threads) {
         HCOL_VERBOSE(1, "MPI_THREAD_MULTIPLE not suppported; skipping hcoll component");

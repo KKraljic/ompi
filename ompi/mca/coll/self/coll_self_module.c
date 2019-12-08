@@ -29,6 +29,7 @@
 #include "ompi/mca/coll/base/coll_base_functions.h"
 #include "coll_self.h"
 
+#include "../../../include/debugging_macros.h"
 
 /*
  * Initial query function that is invoked during MPI_INIT, allowing
@@ -38,7 +39,7 @@ int mca_coll_self_init_query(bool enable_progress_threads,
                              bool enable_mpi_threads)
 {
     /* Nothing to do */
-
+    PRINT_DEBUG;
     return OMPI_SUCCESS;
 }
 

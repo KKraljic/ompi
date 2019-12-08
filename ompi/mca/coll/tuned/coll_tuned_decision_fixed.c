@@ -33,6 +33,8 @@
 #include "ompi/op/op.h"
 #include "coll_tuned.h"
 
+#include "../../../include/debugging_macros.h"
+
 /*
  *  allreduce_intra
  *
@@ -47,6 +49,7 @@ ompi_coll_tuned_allreduce_intra_dec_fixed(const void *sbuf, void *rbuf, int coun
                                           struct ompi_communicator_t *comm,
                                           mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     size_t dsize, block_dsize;
     int comm_size = ompi_comm_size(comm);
     const size_t intermediate_message = 10000;
@@ -346,6 +349,7 @@ int ompi_coll_tuned_reduce_intra_dec_fixed( const void *sendbuf, void *recvbuf,
                                             struct ompi_communicator_t* comm,
                                             mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int communicator_size, segsize = 0;
     size_t message_size, dsize;
     const double a1 =  0.6016 / 1024.0; /* [1/B] */

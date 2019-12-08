@@ -37,9 +37,12 @@
 
 #include "ompi/mca/coll/base/coll_base_util.h"
 
+#include "../../../include/debugging_macros.h"
+
 
 ompi_coll_alg_rule_t* ompi_coll_offloaded_mk_alg_rules (int n_alg)
 {
+    PRINT_DEBUG;
     int i;
     ompi_coll_alg_rule_t* alg_rules;
 
@@ -56,6 +59,7 @@ ompi_coll_alg_rule_t* ompi_coll_offloaded_mk_alg_rules (int n_alg)
 
 ompi_coll_com_rule_t* ompi_coll_offloaded_mk_com_rules (int n_com_rules, int alg_rule_id)
 {
+    PRINT_DEBUG;
     int i;
     ompi_coll_com_rule_t * com_rules;
 
@@ -75,6 +79,7 @@ ompi_coll_com_rule_t* ompi_coll_offloaded_mk_com_rules (int n_com_rules, int alg
 
 ompi_coll_msg_rule_t* ompi_coll_offloaded_mk_msg_rules (int n_msg_rules, int alg_rule_id, int com_rule_id, int mpi_comsize)
 {
+    PRINT_DEBUG;
     int i;
     ompi_coll_msg_rule_t *msg_rules;
 
@@ -102,6 +107,7 @@ ompi_coll_msg_rule_t* ompi_coll_offloaded_mk_msg_rules (int n_msg_rules, int alg
  */
 int ompi_coll_offloaded_dump_msg_rule (ompi_coll_msg_rule_t* msg_p)
 {
+    PRINT_DEBUG;
     if (!msg_p) {
         OPAL_OUTPUT((ompi_coll_offloaded_stream,"Message rule was a NULL ptr?!\n"));
         return (-1);
@@ -120,6 +126,7 @@ int ompi_coll_offloaded_dump_msg_rule (ompi_coll_msg_rule_t* msg_p)
 
 int ompi_coll_offloaded_dump_com_rule (ompi_coll_com_rule_t* com_p)
 {
+    PRINT_DEBUG;
     int i;
 
     if (!com_p) {
@@ -146,6 +153,7 @@ int ompi_coll_offloaded_dump_com_rule (ompi_coll_com_rule_t* com_p)
 
 int ompi_coll_offloaded_dump_alg_rule (ompi_coll_alg_rule_t* alg_p)
 {
+    PRINT_DEBUG;
     int i;
 
     if (!alg_p) {
@@ -172,6 +180,7 @@ int ompi_coll_offloaded_dump_alg_rule (ompi_coll_alg_rule_t* alg_p)
 
 int ompi_coll_offloaded_dump_all_rules (ompi_coll_alg_rule_t* alg_p, int n_rules)
 {
+    PRINT_DEBUG;
     int i;
 
     if (!alg_p) {
@@ -195,6 +204,7 @@ int ompi_coll_offloaded_dump_all_rules (ompi_coll_alg_rule_t* alg_p, int n_rules
  */
 int ompi_coll_offloaded_free_msg_rules_in_com_rule (ompi_coll_com_rule_t* com_p)
 {
+    PRINT_DEBUG;
     int rc=0;
     ompi_coll_msg_rule_t* msg_p;
 
@@ -224,6 +234,7 @@ int ompi_coll_offloaded_free_msg_rules_in_com_rule (ompi_coll_com_rule_t* com_p)
 
 int ompi_coll_offloaded_free_coms_in_alg_rule (ompi_coll_alg_rule_t* alg_p)
 {
+    PRINT_DEBUG;
     int rc=0;
     int i;
 
@@ -258,6 +269,7 @@ int ompi_coll_offloaded_free_coms_in_alg_rule (ompi_coll_alg_rule_t* alg_p)
 
 int ompi_coll_offloaded_free_all_rules (ompi_coll_alg_rule_t* alg_p, int n_algs)
 {
+    PRINT_DEBUG;
     int i;
     int rc = 0;
 
@@ -288,6 +300,7 @@ int ompi_coll_offloaded_free_all_rules (ompi_coll_alg_rule_t* alg_p, int n_algs)
  */
 ompi_coll_com_rule_t* ompi_coll_offloaded_get_com_rule_ptr (ompi_coll_alg_rule_t* rules, int alg_id, int mpi_comsize)
 {
+    PRINT_DEBUG;
     ompi_coll_alg_rule_t*  alg_p = (ompi_coll_alg_rule_t*) NULL;
     ompi_coll_com_rule_t*  com_p = (ompi_coll_com_rule_t*) NULL;
     ompi_coll_com_rule_t*  best_com_p = (ompi_coll_com_rule_t*) NULL;
@@ -343,6 +356,7 @@ ompi_coll_com_rule_t* ompi_coll_offloaded_get_com_rule_ptr (ompi_coll_alg_rule_t
 int ompi_coll_offloaded_get_target_method_params (ompi_coll_com_rule_t* base_com_rule, size_t mpi_msgsize, int *result_topo_faninout,
                                               int* result_segsize, int* max_requests)
 {
+    PRINT_DEBUG;
     ompi_coll_msg_rule_t*  msg_p = (ompi_coll_msg_rule_t*) NULL;
     ompi_coll_msg_rule_t*  best_msg_p = (ompi_coll_msg_rule_t*) NULL;
     int i;

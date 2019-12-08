@@ -46,6 +46,7 @@ static int offloaded_module_enable(mca_coll_base_module_t *module,
 int ompi_coll_offloaded_init_query(bool enable_progress_threads,
                                bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     return OMPI_SUCCESS;
 }
 
@@ -237,6 +238,7 @@ offloaded_module_enable( mca_coll_base_module_t *module,
 }
 
 int mca_coll_offloaded_ft_event(int state) {
+    PRINT_DEBUG;
     if(OPAL_CRS_CHECKPOINT == state) {
         ;
     }

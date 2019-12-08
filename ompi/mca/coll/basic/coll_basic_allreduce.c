@@ -32,6 +32,8 @@
 #include "coll_basic.h"
 #include "ompi/mca/pml/pml.h"
 
+#include "../../../include/debugging_macros.h"
+
 
 /*
  *	allreduce_intra
@@ -47,6 +49,7 @@ mca_coll_basic_allreduce_intra(const void *sbuf, void *rbuf, int count,
                                struct ompi_communicator_t *comm,
                                mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int err;
 
     /* Reduce to 0 and broadcast. */
@@ -82,6 +85,7 @@ mca_coll_basic_allreduce_inter(const void *sbuf, void *rbuf, int count,
                                struct ompi_communicator_t *comm,
                                mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int err, i, rank, root = 0, rsize, line;
     ptrdiff_t extent, dsize, gap;
     char *tmpbuf = NULL, *pml_buffer = NULL;

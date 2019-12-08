@@ -40,6 +40,8 @@
 #include "ompi/mca/coll/coll.h"
 #include "ompi/mca/coll/base/base.h"
 
+#include "../../../include/debugging_macros.h"
+
 /*
  * Private functions
  */
@@ -123,6 +125,7 @@ init_query_2_0_0(const mca_base_component_t * component,
 static int init_query(const mca_base_component_t * component,
                       bool enable_progress_threads, bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     int ret;
 
     opal_output_verbose(10, ompi_coll_base_framework.framework_output,

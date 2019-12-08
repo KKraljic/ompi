@@ -27,6 +27,8 @@
 #include "ompi/mca/coll/base/coll_base_topo.h"
 #include "ompi/mca/coll/base/coll_base_util.h"
 
+#include "../../../include/debugging_macros.h"
+
 /* allreduce algorithm variables */
 static int coll_tuned_allreduce_forced_algorithm = 0;
 static int coll_tuned_allreduce_segment_size = 0;
@@ -56,6 +58,7 @@ static mca_base_var_enum_value_t allreduce_algorithms[] = {
 
 int ompi_coll_tuned_allreduce_intra_check_forced_init (coll_tuned_force_algorithm_mca_param_indices_t *mca_param_indices)
 {
+    PRINT_DEBUG;
     mca_base_var_enum_t *new_enum;
     int cnt;
 
@@ -127,6 +130,7 @@ int ompi_coll_tuned_allreduce_intra_do_this(const void *sbuf, void *rbuf, int co
                                             mca_coll_base_module_t *module,
                                             int algorithm, int faninout, int segsize)
 {
+    PRINT_DEBUG;
     OPAL_OUTPUT((ompi_coll_tuned_stream,"coll:tuned:allreduce_intra_do_this algorithm %d topo fan in/out %d segsize %d",
                  algorithm, faninout, segsize));
 

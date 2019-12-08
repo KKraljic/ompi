@@ -107,6 +107,7 @@ int ompi_coll_offloaded_reduce_intra_dec_dynamic( const void *sbuf, void *rbuf,
                                               struct ompi_communicator_t* comm,
                                               mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     mca_coll_offloaded_module_t *offloaded_module = (mca_coll_offloaded_module_t*) module;
 
     OPAL_OUTPUT((ompi_coll_offloaded_stream, "coll:offloaded:reduce_intra_dec_dynamic"));

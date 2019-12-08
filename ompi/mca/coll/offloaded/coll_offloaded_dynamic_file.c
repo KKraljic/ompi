@@ -35,6 +35,8 @@
 /* and our own prototypes */
 #include "coll_offloaded_dynamic_file.h"
 
+#include "../../../include/debugging_macros.h"
+
 
 #define MYEOF   -999
 
@@ -56,6 +58,7 @@ static int fileline=0; /* used for verbose error messages */
 
 int ompi_coll_offloaded_read_rules_config_file (char *fname, ompi_coll_alg_rule_t** rules, int n_collectives)
 {
+    PRINT_DEBUG;
     FILE *fptr = (FILE*) NULL;
     int X, CI, NCS, CS, ALG, NMS, FANINOUT;
     long MS, SS;
@@ -256,6 +259,7 @@ int ompi_coll_offloaded_read_rules_config_file (char *fname, ompi_coll_alg_rule_
 
 static void skiptonewline (FILE *fptr)
 {
+    PRINT_DEBUG;
     char val;
     int rc;
 
@@ -271,6 +275,7 @@ static void skiptonewline (FILE *fptr)
 
 static long getnext (FILE *fptr)
 {
+    PRINT_DEBUG;
     long val;
     int rc;
     char trash;

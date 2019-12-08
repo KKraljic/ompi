@@ -30,6 +30,7 @@
 #include "ompi/mca/pml/pml.h"
 #include "ompi/op/op.h"
 
+#include "../../../include/debugging_macros.h"
 
 /*
  *	reduce_log_intra
@@ -90,6 +91,7 @@ mca_coll_basic_reduce_log_intra(const void *sbuf, void *rbuf, int count,
                                 int root, struct ompi_communicator_t *comm,
                                 mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int i, size, rank, vrank;
     int err, peer, dim, mask;
     ptrdiff_t lb, extent, dsize, gap;
@@ -287,6 +289,7 @@ mca_coll_basic_reduce_lin_inter(const void *sbuf, void *rbuf, int count,
                                 int root, struct ompi_communicator_t *comm,
                                 mca_coll_base_module_t *module)
 {
+    PRINT_DEBUG;
     int i, err, size;
     ptrdiff_t dsize, gap;
     char *free_buffer = NULL;
