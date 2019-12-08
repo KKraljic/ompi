@@ -127,7 +127,7 @@ static int offloaded_register(void)
                                            &ompi_coll_offloaded_priority);
 
     /* some initial guesses at topology parameters */
-    ompi_coll_offloaded_init_tree_fanout = 1;
+    ompi_coll_offloaded_init_tree_fanout = 4;
     (void) mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
                                            "init_tree_fanout",
                                            "Inital fanout used in the tree topologies for each communicator. This is only an initial guess, if a offloaded collective needs a different fanout for an operation, it build it dynamically. This parameter is only for the first guess and might save a little time",
@@ -136,7 +136,7 @@ static int offloaded_register(void)
                                            MCA_BASE_VAR_SCOPE_READONLY,
                                            &ompi_coll_offloaded_init_tree_fanout);
 
-    ompi_coll_offloaded_init_chain_fanout = 1;
+    ompi_coll_offloaded_init_chain_fanout = 4;
     (void) mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
                                            "init_chain_fanout",
                                            "Inital fanout used in the chain (fanout followed by pipeline) topologies for each communicator. This is only an initial guess, if a offloaded collective needs a different fanout for an operation, it build it dynamically. This parameter is only for the first guess and might save a little time",
@@ -145,7 +145,7 @@ static int offloaded_register(void)
                                            MCA_BASE_VAR_SCOPE_READONLY,
                                            &ompi_coll_offloaded_init_chain_fanout);
 
-    ompi_coll_offloaded_alltoall_small_msg = 1;
+    ompi_coll_offloaded_alltoall_small_msg = 200;
     (void) mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
                                            "alltoall_small_msg",
                                            "threshold (if supported) to decide if small MSGs alltoall algorithm will be used",
@@ -154,7 +154,7 @@ static int offloaded_register(void)
                                            MCA_BASE_VAR_SCOPE_READONLY,
                                            &ompi_coll_offloaded_alltoall_small_msg);
 
-    ompi_coll_offloaded_alltoall_intermediate_msg = 1;
+    ompi_coll_offloaded_alltoall_intermediate_msg = 3000;
     (void) mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
                                            "alltoall_intermediate_msg",
                                            "threshold (if supported) to decide if intermediate MSGs alltoall algorithm will be used",
