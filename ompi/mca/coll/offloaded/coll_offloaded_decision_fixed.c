@@ -322,7 +322,10 @@ ompi_coll_offloaded_allreduce_intra_recursivedoubling(const void *sbuf, void *rb
                                     MPI_STATUS_IGNORE));
             if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
             /* tmpsend = tmprecv (op) tmpsend */
-            ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
+            /*
+             * TODO: replace this part with check for offloading capable function
+             * */
+            //ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
             newrank = rank >> 1;
         }
     } else {
@@ -352,13 +355,19 @@ ompi_coll_offloaded_allreduce_intra_recursivedoubling(const void *sbuf, void *rb
         /* Apply operation */
         if (rank < remote) {
             /* tmprecv = tmpsend (op) tmprecv */
-            ompi_op_reduce(op, tmpsend, tmprecv, count, dtype);
+            /*
+             * TODO: replace this part with check for offloading capable function
+             * */
+            //ompi_op_reduce(op, tmpsend, tmprecv, count, dtype);
             tmpswap = tmprecv;
             tmprecv = tmpsend;
             tmpsend = tmpswap;
         } else {
             /* tmpsend = tmprecv (op) tmpsend */
-            ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
+            /*
+            * TODO: replace this part with check for offloading capable function
+            * */
+            //ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
         }
     }
 
