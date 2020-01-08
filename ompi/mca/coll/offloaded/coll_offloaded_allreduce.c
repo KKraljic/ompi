@@ -149,11 +149,11 @@ ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf,
                                     MCA_COLL_BASE_TAG_ALLREDUCE, comm,
                                     MPI_STATUS_IGNORE));
             if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
-            /* tmpsend = tmprecv (op) tmpsend */
+            // tmpsend = tmprecv (op) tmpsend
             /*
              * TODO: replace this part with check for offloading capable function
              * */
-            //ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
+            ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
             newrank = rank >> 1;
         }
     } else {
@@ -182,7 +182,7 @@ ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf,
 
         /* Apply operation */
         if (rank < remote) {
-             tmprecv = tmpsend (op) tmprecv
+            // tmprecv = tmpsend (op) tmprecv;
             /*
              * TODO: replace this part with check for offloading capable function
              * */
@@ -191,7 +191,7 @@ ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf,
             tmprecv = tmpsend;
             tmpsend = tmpswap;
         } else {
-            tmpsend = tmprecv (op) tmpsend;
+            //tmpsend = tmprecv (op) tmpsend;
             /*
             * TODO: MARKER - op to be offloaded
             * */
