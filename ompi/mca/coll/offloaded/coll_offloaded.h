@@ -25,6 +25,7 @@
 
 BEGIN_C_DECLS
 extern int   ompi_coll_offloaded_stream;
+extern int   ompi_coll_offloaded_priority;
 
 
 int ompi_coll_offloaded_init_query(bool enable_progress_threads,
