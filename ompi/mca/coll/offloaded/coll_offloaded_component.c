@@ -49,21 +49,7 @@ const char *ompi_coll_offloaded_component_version_string =
 /*
  * Global variable
  */
-int   ompi_coll_offloaded_stream = -1;
 int   ompi_coll_offloaded_priority = 30;
-bool  ompi_coll_offloaded_use_dynamic_rules = false;
-char* ompi_coll_offloaded_dynamic_rules_filename = (char*) NULL;
-int   ompi_coll_offloaded_init_tree_fanout = 4;
-int   ompi_coll_offloaded_init_chain_fanout = 4;
-int   ompi_coll_offloaded_init_max_requests = 128;
-int   ompi_coll_offloaded_alltoall_small_msg = 200;
-int   ompi_coll_offloaded_alltoall_intermediate_msg = 3000;
-
-/* forced alogrithm variables */
-/* indices for the MCA parameters */
-coll_offloaded_force_algorithm_mca_param_indices_t ompi_coll_offloaded_forced_params[COLLCOUNT] = {{0}};
-/* max algorithm values */
-int ompi_coll_offloaded_forced_max_algorithms[COLLCOUNT] = {0};
 
 /*
  * Local function
@@ -124,10 +110,6 @@ static int offloaded_register(void)
                                            OPAL_INFO_LVL_6,
                                            MCA_BASE_VAR_SCOPE_READONLY,
                                            &ompi_coll_offloaded_priority);
-    /* register forced params */
-    ompi_coll_offloaded_allreduce_intra_check_forced_init(&ompi_coll_offloaded_forced_params[ALLREDUCE]);
-    ompi_coll_offloaded_reduce_intra_check_forced_init(&ompi_coll_offloaded_forced_params[REDUCE]);
-
     return OMPI_SUCCESS;
 }
 
@@ -167,17 +149,7 @@ static int offloaded_close(void)
 {
     PRINT_DEBUG;
     OPAL_OUTPUT((ompi_coll_offloaded_stream, "coll:offloaded:component_close: called"));
-
-    /* dealloc alg table if allocated */
-    /* dealloc dynamic changable rules if allocated */
-
     OPAL_OUTPUT((ompi_coll_offloaded_stream, "coll:offloaded:component_close: done!"));
-
-    if( NULL != mca_coll_offloaded_component.all_base_rules ) {
-        ompi_coll_offloaded_free_all_rules(mca_coll_offloaded_component.all_base_rules, COLLCOUNT);
-        mca_coll_offloaded_component.all_base_rules = NULL;
-    }
-
     return OMPI_SUCCESS;
 }
 
