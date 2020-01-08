@@ -86,22 +86,13 @@ ompi_coll_offloaded_comm_query(struct ompi_communicator_t *comm, int *priority)
 
     *priority = ompi_coll_offloaded_priority;
 
-    /*
-     * Choose whether to use [intra|inter] decision functions
-     * and if using fixed OR dynamic rule sets.
-     * Right now you cannot mix them, maybe later on it can be changed
-     * but this would probably add an extra if and funct call to the path
-     */
+    //Set function pointer to functions below
     offloaded_module->super.coll_module_enable = offloaded_module_enable;
     offloaded_module->super.ft_event = mca_coll_offloaded_ft_event;
 
-    /* By default stick with the fied version of the offloaded collectives. Later on,
-     * when the module get enabled, set the correct version based on the availability
-     * of the dynamic rules.
-     */
-
-    offloaded_module->super.coll_allreduce  = ompi_coll_offloaded_allreduce_intra_dec_fixed;
-    offloaded_module->super.coll_reduce     = ompi_coll_offloaded_reduce_intra_dec_fixed;
+    //Set function pointer to appropriate offloading function
+    offloaded_module->super.coll_allreduce  = ompi_coll_offloaded_allreduce_intra;
+    offloaded_module->super.coll_reduce     = ompi_coll_offloaded_reduce_intra;
 
     offloaded_module->super.coll_allgather  = NULL;
     offloaded_module->super.coll_allgatherv = NULL;
@@ -120,62 +111,6 @@ ompi_coll_offloaded_comm_query(struct ompi_communicator_t *comm, int *priority)
     offloaded_module->super.coll_scatterv   = NULL;
     return &(offloaded_module->super);
 }
-
-/* We put all routines that handle the MCA user forced algorithm and parameter choices here */
-/* recheck the setting of forced, called on module create (i.e. for each new comm) */
-
-static int
-ompi_coll_offloaded_forced_getvalues( enum COLLTYPE type,
-                                  coll_offloaded_force_algorithm_params_t *forced_values )
-{
-    PRINT_DEBUG;
-    coll_offloaded_force_algorithm_mca_param_indices_t* mca_params;
-    const int *tmp = NULL;
-
-    mca_params = &(ompi_coll_offloaded_forced_params[type]);
-
-    /**
-     * Set the selected algorithm to 0 by default. Later on we can check this against 0
-     * to see if it was setted explicitly (if we suppose that setting it to 0 enable the
-     * default behavior) or not.
-     */
-    mca_base_var_get_value(mca_params->algorithm_param_index, &tmp, NULL, NULL);
-    forced_values->algorithm = tmp ? tmp[0] : 0;
-
-    if( BARRIER != type ) {
-        mca_base_var_get_value(mca_params->segsize_param_index, &tmp, NULL, NULL);
-        if (tmp) forced_values->segsize = tmp[0];
-        mca_base_var_get_value(mca_params->tree_fanout_param_index, &tmp, NULL, NULL);
-        if (tmp) forced_values->tree_fanout = tmp[0];
-        mca_base_var_get_value(mca_params->chain_fanout_param_index, &tmp, NULL, NULL);
-        if (tmp) forced_values->chain_fanout = tmp[0];
-        mca_base_var_get_value(mca_params->max_requests_param_index, &tmp, NULL, NULL);
-        if (tmp) forced_values->max_requests = tmp[0];
-    }
-    return (MPI_SUCCESS);
-}
-
-#define COLL_offloaded_EXECUTE_IF_DYNAMIC(TMOD, TYPE, EXECUTE)              \
-    {                                                                   \
-        int need_dynamic_decision = 0;                                  \
-        ompi_coll_offloaded_forced_getvalues( (TYPE), &((TMOD)->user_forced[(TYPE)]) ); \
-        (TMOD)->com_rules[(TYPE)] = NULL;                               \
-        if( 0 != (TMOD)->user_forced[(TYPE)].algorithm ) {              \
-            need_dynamic_decision = 1;                                  \
-        }                                                               \
-        if( NULL != mca_coll_offloaded_component.all_base_rules ) {         \
-            (TMOD)->com_rules[(TYPE)]                                   \
-                = ompi_coll_offloaded_get_com_rule_ptr( mca_coll_offloaded_component.all_base_rules, \
-                                                    (TYPE), size );     \
-            if( NULL != (TMOD)->com_rules[(TYPE)] ) {                   \
-                need_dynamic_decision = 1;                              \
-            }                                                           \
-        }                                                               \
-        if( 1 == need_dynamic_decision ) {                              \
-            OPAL_OUTPUT((ompi_coll_offloaded_stream,"coll:offloaded: enable dynamic selection for "#TYPE)); \
-            EXECUTE;                                                    \
-        }                                                               \
-    }
 
 /*
  * Init module on the communicator
@@ -198,53 +133,11 @@ offloaded_module_enable( mca_coll_base_module_t *module,
         size = ompi_comm_size(comm);
     }
 
-    /**
-     * we still malloc data as it is used by the offloaded modules
-     * if we don't allocate it and fall back to a BASIC module routine then confuses debuggers
-     * we place any special info after the default data
-     *
-     * BUT on very large systems we might not be able to allocate all this memory so
-     * we do check a MCA parameter to see if if we should allocate this memory
-     *
-     * The default is set very high
-     */
-
     /* prepare the placeholder for the array of request* */
     data = OBJ_NEW(mca_coll_base_comm_t);
     if (NULL == data) {
         return OMPI_ERROR;
     }
-
-    if (ompi_coll_offloaded_use_dynamic_rules) {
-        OPAL_OUTPUT((ompi_coll_offloaded_stream,"coll:offloaded:module_init MCW & Dynamic"));
-
-        /**
-         * next dynamic state, recheck all forced rules as well
-         * warning, we should check to make sure this is really an INTRA comm here...
-         */
-
-        COLL_offloaded_EXECUTE_IF_DYNAMIC(offloaded_module, ALLREDUCE,
-                                      offloaded_module->super.coll_allreduce  = ompi_coll_offloaded_allreduce_intra_dec_dynamic);
-        COLL_offloaded_EXECUTE_IF_DYNAMIC(offloaded_module, REDUCE,
-                                      offloaded_module->super.coll_reduce     = ompi_coll_offloaded_reduce_intra_dec_dynamic);
-    }
-
-    /* general n fan out tree */
-    data->cached_ntree = NULL;
-    /* binary tree */
-    data->cached_bintree = NULL;
-    /* binomial tree */
-    data->cached_bmtree = NULL;
-    /* binomial tree */
-    data->cached_in_order_bmtree = NULL;
-    /* k-nomial tree */
-    data->cached_kmtree = NULL;
-    /* chains (fanout followed by pipelines) */
-    data->cached_chain = NULL;
-    /* standard pipeline */
-    data->cached_pipeline = NULL;
-    /* in-order binary tree */
-    data->cached_in_order_bintree = NULL;
 
     /* All done */
     offloaded_module->super.base_data = data;
