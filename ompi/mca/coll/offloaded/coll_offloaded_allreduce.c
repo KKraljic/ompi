@@ -184,11 +184,11 @@ ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf,
 
         /* Apply operation */
         if (rank < remote) {
-            /* tmprecv = tmpsend (op) tmprecv */
+             tmprecv = tmpsend (op) tmprecv
             /*
              * TODO: replace this part with check for offloading capable function
              * */
-            //ompi_op_reduce(op, tmpsend, tmprecv, count, dtype);
+            ompi_op_reduce(op, tmpsend, tmprecv, count, dtype);
             tmpswap = tmprecv;
             tmprecv = tmpsend;
             tmpsend = tmpswap;
