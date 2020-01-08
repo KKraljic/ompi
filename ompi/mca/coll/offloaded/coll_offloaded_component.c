@@ -36,7 +36,6 @@
 #include "mpi.h"
 #include "ompi/mca/coll/coll.h"
 #include "coll_offloaded.h"
-#include "coll_offloaded_dynamic_file.h"
 
 #include "../../../include/debugging_macros.h"
 
