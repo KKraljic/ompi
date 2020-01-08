@@ -65,6 +65,7 @@ static int init_query(const mca_base_component_t * ls,
 int mca_coll_base_find_available(bool enable_progress_threads,
                                  bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     mca_base_component_list_item_t *cli, *next;
     const mca_base_component_t *component;
 
@@ -112,6 +113,7 @@ init_query_2_0_0(const mca_base_component_t * component,
                  bool enable_progress_threads,
                  bool enable_mpi_threads)
 {
+    PRINT_DEBUG;
     mca_coll_base_component_2_0_0_t *coll =
         (mca_coll_base_component_2_0_0_t *) component;
 
