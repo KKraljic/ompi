@@ -31,8 +31,6 @@
 #include "ompi/mca/coll/base/base.h"
 #include "ompi/mca/coll/base/coll_base_topo.h"
 #include "coll_offloaded.h"
-#include "coll_offloaded_dynamic_rules.h"
-#include "coll_offloaded_dynamic_file.h"
 
 #include "../../../include/debugging_macros.h"
 
