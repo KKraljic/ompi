@@ -37,8 +37,6 @@ struct mca_coll_offloaded_component_t {
 	mca_coll_base_component_2_0_0_t super;
 	/** MCA parameter: Priority of this component */
 	int offloaded_priority;
-	/* cached decision table stuff (moved from MCW module) */
-	ompi_coll_alg_rule_t *all_base_rules;
 };
 /**
  * Convenience typedef
