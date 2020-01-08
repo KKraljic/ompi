@@ -28,8 +28,7 @@ extern int   ompi_coll_offloaded_stream;
 extern int   ompi_coll_offloaded_priority;
 
 
-int ompi_coll_offloaded_init_query(bool enable_progress_threads,
-                               bool enable_mpi_threads);
+int ompi_coll_offloaded_init_query(bool enable_progress_threads, bool enable_mpi_threads);
 
 int ompi_coll_offloaded_allreduce_intra(ALLREDUCE_ARGS);
 int ompi_coll_offloaded_reduce_intra(REDUCE_ARGS);
