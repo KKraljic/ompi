@@ -30,8 +30,8 @@ sources = \
         coll_offloaded_dynamic_rules.c \
         coll_offloaded_component.c \
         coll_offloaded_module.c \
-        coll_offloaded_allreduce_decision.c \
-        coll_offloaded_reduce_decision.c
+        coll_offloaded_allreduce.c \
+        coll_offloaded_reduce.c
 
 # Make the output library in this directory, and name it either
 # mca_<type>_<name>.la (for DSO builds) or libmca_<type>_<name>.la
