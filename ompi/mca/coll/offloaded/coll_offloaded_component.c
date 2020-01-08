@@ -49,6 +49,7 @@ const char *ompi_coll_offloaded_component_version_string =
 /*
  * Global variable
  */
+int   ompi_coll_offloaded_stream = -1;
 int   ompi_coll_offloaded_priority = 30;
 
 /*
