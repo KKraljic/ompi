@@ -31,6 +31,9 @@ extern int   ompi_coll_offloaded_priority;
 int ompi_coll_offloaded_init_query(bool enable_progress_threads,
                                bool enable_mpi_threads);
 
+int ompi_coll_offloaded_allreduce_intra(ALLREDUCE_ARGS);
+int ompi_coll_offloaded_reduce_intra(REDUCE_ARGS);
+
 mca_coll_base_module_t *
 ompi_coll_offloaded_comm_query(struct ompi_communicator_t *comm, int *priority);
 

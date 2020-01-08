@@ -29,8 +29,6 @@
 
 #include "../../../include/debugging_macros.h"
 
-
-int ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf, int count, struct ompi_datatype_t *dtype, struct ompi_op_t *op, struct ompi_communicator_t *comm, mca_coll_base_module_t *module);
 int ompi_coll_offloaded_sendrecv_actual( const void* sendbuf, size_t scount, ompi_datatype_t* sdatatype, int dest, int stag, void* recvbuf, size_t rcount, ompi_datatype_t* rdatatype, int source, int rtag, struct ompi_communicator_t* comm, ompi_status_public_t* status );
 /*
  *  allreduce_intra
