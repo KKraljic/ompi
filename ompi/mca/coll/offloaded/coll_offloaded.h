@@ -24,6 +24,9 @@
 #include "opal/util/output.h"
 
 BEGIN_C_DECLS
+extern int   ompi_coll_offloaded_stream;
+
+
 int ompi_coll_offloaded_init_query(bool enable_progress_threads,
                                bool enable_mpi_threads);
 
