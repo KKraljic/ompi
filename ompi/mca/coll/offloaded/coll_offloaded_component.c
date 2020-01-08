@@ -159,11 +159,6 @@ mca_coll_offloaded_module_construct(mca_coll_offloaded_module_t *module)
 {
     PRINT_DEBUG;
     mca_coll_offloaded_module_t *offloaded_module = (mca_coll_offloaded_module_t*) module;
-
-    for( int i = 0; i < COLLCOUNT; i++ ) {
-        offloaded_module->user_forced[i].algorithm = 0;
-        offloaded_module->com_rules[i] = NULL;
-    }
 }
 
 OBJ_CLASS_INSTANCE(mca_coll_offloaded_module_t, mca_coll_base_module_t,

@@ -26,6 +26,13 @@
 #include "coll_offloaded.h"
 
 #include "../../../include/debugging_macros.h"
+
+int ompi_coll_offloaded_reduce_intra(const void *sbuf, void *rbuf, int count,
+                                 struct ompi_datatype_t *dtype,
+                                 struct ompi_op_t *op,
+                                 int root,
+                                 struct ompi_communicator_t *comm,
+                                 mca_coll_base_module_t *module);
 /*
  *  reduce_lin_intra
  *
