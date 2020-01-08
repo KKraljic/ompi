@@ -29,130 +29,265 @@
 
 #include "../../../include/debugging_macros.h"
 
-/* allreduce algorithm variables */
-static int coll_offloaded_allreduce_forced_algorithm = 0;
-static int coll_offloaded_allreduce_segment_size = 0;
-static int coll_offloaded_allreduce_tree_fanout;
-static int coll_offloaded_allreduce_chain_fanout;
 
-/* valid values for coll_offloaded_allreduce_forced_algorithm */
-static mca_base_var_enum_value_t allreduce_algorithms[] = {
-    {0, "ignore"},
-    {1, "basic_linear"},
-    {2, "nonoverlapping"},
-    {3, "recursive_doubling"},
-    {4, "ring"},
-    {5, "segmented_ring"},
-    {6, "rabenseifner"},
-	//TODO: INSERT OFFLOADED VARIANT WITHIN HERE!
-    {0, NULL}
-};
-
-/* The following are used by dynamic and forced rules */
-
-/* publish details of each algorithm and if its forced/fixed/locked in */
-/* as you add methods/algorithms you must update this and the query/map routines */
-
-/* this routine is called by the component only */
-/* this makes sure that the mca parameters are set to their initial values and perms */
-/* module does not call this they call the forced_getvalues routine instead */
-
-int ompi_coll_offloaded_allreduce_intra_check_forced_init (coll_offloaded_force_algorithm_mca_param_indices_t *mca_param_indices)
+int ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf, int count, struct ompi_datatype_t *dtype, struct ompi_op_t *op, struct ompi_communicator_t *comm, mca_coll_base_module_t *module);
+int ompi_coll_offloaded_sendrecv_actual( const void* sendbuf, size_t scount, ompi_datatype_t* sdatatype, int dest, int stag, void* recvbuf, size_t rcount, ompi_datatype_t* rdatatype, int source, int rtag, struct ompi_communicator_t* comm, ompi_status_public_t* status );
+/*
+ *  allreduce_intra
+ *
+ *  Function:   - allreduce using other MPI collectives
+ *  Accepts:    - same as MPI_Allreduce()
+ *  Returns:    - MPI_SUCCESS or error code
+ */
+/*
+ *   ompi_coll_base_allreduce_intra_recursivedoubling
+ *
+ *   Function:       Recursive doubling algorithm for allreduce operation
+ *   Accepts:        Same as MPI_Allreduce()
+ *   Returns:        MPI_SUCCESS or error code
+ *
+ *   Description:    Implements recursive doubling algorithm for allreduce.
+ *                   Original (non-segmented) implementation is used in MPICH-2
+ *                   for small and intermediate size messages.
+ *                   The algorithm preserves order of operations so it can
+ *                   be used both by commutative and non-commutative operations.
+ *
+ *         Example on 7 nodes:
+ *         Initial state
+ *         #      0       1      2       3      4       5      6
+ *               [0]     [1]    [2]     [3]    [4]     [5]    [6]
+ *         Initial adjustment step for non-power of two nodes.
+ *         old rank      1              3              5      6
+ *         new rank      0              1              2      3
+ *                     [0+1]          [2+3]          [4+5]   [6]
+ *         Step 1
+ *         old rank      1              3              5      6
+ *         new rank      0              1              2      3
+ *                     [0+1+]         [0+1+]         [4+5+]  [4+5+]
+ *                     [2+3+]         [2+3+]         [6   ]  [6   ]
+ *         Step 2
+ *         old rank      1              3              5      6
+ *         new rank      0              1              2      3
+ *                     [0+1+]         [0+1+]         [0+1+]  [0+1+]
+ *                     [2+3+]         [2+3+]         [2+3+]  [2+3+]
+ *                     [4+5+]         [4+5+]         [4+5+]  [4+5+]
+ *                     [6   ]         [6   ]         [6   ]  [6   ]
+ *         Final adjustment step for non-power of two nodes
+ *         #      0       1      2       3      4       5      6
+ *              [0+1+] [0+1+] [0+1+]  [0+1+] [0+1+]  [0+1+] [0+1+]
+ *              [2+3+] [2+3+] [2+3+]  [2+3+] [2+3+]  [2+3+] [2+3+]
+ *              [4+5+] [4+5+] [4+5+]  [4+5+] [4+5+]  [4+5+] [4+5+]
+ *              [6   ] [6   ] [6   ]  [6   ] [6   ]  [6   ] [6   ]
+ *
+ */
+int
+ompi_coll_offloaded_allreduce_intra(const void *sbuf, void *rbuf,
+                                    int count,
+                                    struct ompi_datatype_t *dtype,
+                                    struct ompi_op_t *op,
+                                    struct ompi_communicator_t *comm,
+                                    mca_coll_base_module_t *module)
 {
     PRINT_DEBUG;
-    mca_base_var_enum_t *new_enum;
-    int cnt;
+    int ret, line, rank, size, adjsize, remote, distance;
+    int newrank, newremote, extra_ranks;
+    char *tmpsend = NULL, *tmprecv = NULL, *tmpswap = NULL, *inplacebuf_free = NULL, *inplacebuf;
+    ptrdiff_t span, gap = 0;
 
-    for( cnt = 0; NULL != allreduce_algorithms[cnt].string; cnt++ );
-    ompi_coll_offloaded_forced_max_algorithms[ALLREDUCE] = cnt;
 
-    (void) mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
-                                           "allreduce_algorithm_count",
-                                           "Number of allreduce algorithms available",
-                                           MCA_BASE_VAR_TYPE_INT, NULL, 0,
-                                           MCA_BASE_VAR_FLAG_DEFAULT_ONLY,
-                                           OPAL_INFO_LVL_5,
-                                           MCA_BASE_VAR_SCOPE_CONSTANT,
-                                           &ompi_coll_offloaded_forced_max_algorithms[ALLREDUCE]);
+    size = ompi_comm_size(comm);
+    rank = ompi_comm_rank(comm);
 
-    /* MPI_T: This variable should eventually be bound to a communicator */
-    coll_offloaded_allreduce_forced_algorithm = 0;
-    (void) mca_base_var_enum_create("coll_offloaded_allreduce_algorithms", allreduce_algorithms, &new_enum);
-    mca_param_indices->algorithm_param_index =
-        mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
-                                        "allreduce_algorithm",
-                                        "Which allreduce algorithm is used. Can be locked down to any of: 0 ignore, 1 basic linear, 2 nonoverlapping (offloaded reduce + offloaded bcast), 3 recursive doubling, 4 ring, 5 segmented ring",
-                                        MCA_BASE_VAR_TYPE_INT, new_enum, 0, MCA_BASE_VAR_FLAG_SETTABLE,
-                                        OPAL_INFO_LVL_5,
-                                        MCA_BASE_VAR_SCOPE_ALL,
-                                        &coll_offloaded_allreduce_forced_algorithm);
-    OBJ_RELEASE(new_enum);
-    if (mca_param_indices->algorithm_param_index < 0) {
-        return mca_param_indices->algorithm_param_index;
+    OPAL_OUTPUT((ompi_coll_base_framework.framework_output,
+            "coll:offloaded:allreduce_intra_recursivedoubling rank %d", rank));
+
+    /* Special case for size == 1 */
+    if (1 == size) {
+        if (MPI_IN_PLACE != sbuf) {
+            ret = ompi_datatype_copy_content_same_ddt(dtype, count, (char*)rbuf, (char*)sbuf);
+            if (ret < 0) { line = __LINE__; goto error_hndl; }
+        }
+        return MPI_SUCCESS;
     }
 
-    coll_offloaded_allreduce_segment_size = 0;
-    mca_param_indices->segsize_param_index =
-        mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
-                                        "allreduce_algorithm_segmentsize",
-                                        "Segment size in bytes used by default for allreduce algorithms. Only has meaning if algorithm is forced and supports segmenting. 0 bytes means no segmentation.",
-                                        MCA_BASE_VAR_TYPE_INT, NULL, 0, MCA_BASE_VAR_FLAG_SETTABLE,
-                                        OPAL_INFO_LVL_5,
-                                        MCA_BASE_VAR_SCOPE_ALL,
-                                        &coll_offloaded_allreduce_segment_size);
+    /* Allocate and initialize temporary send buffer */
+    span = opal_datatype_span(&dtype->super, count, &gap);
+    inplacebuf_free = (char*) malloc(span);
+    if (NULL == inplacebuf_free) { ret = -1; line = __LINE__; goto error_hndl; }
+    inplacebuf = inplacebuf_free - gap;
 
-    coll_offloaded_allreduce_tree_fanout = ompi_coll_offloaded_init_tree_fanout; /* get system wide default */
-    mca_param_indices->tree_fanout_param_index =
-        mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
-                                        "allreduce_algorithm_tree_fanout",
-                                        "Fanout for n-tree used for allreduce algorithms. Only has meaning if algorithm is forced and supports n-tree topo based operation.",
-                                        MCA_BASE_VAR_TYPE_INT, NULL, 0, MCA_BASE_VAR_FLAG_SETTABLE,
-                                        OPAL_INFO_LVL_5,
-                                        MCA_BASE_VAR_SCOPE_ALL,
-                                        &coll_offloaded_allreduce_tree_fanout);
+    if (MPI_IN_PLACE == sbuf) {
+        ret = ompi_datatype_copy_content_same_ddt(dtype, count, inplacebuf, (char*)rbuf);
+        if (ret < 0) { line = __LINE__; goto error_hndl; }
+    } else {
+        ret = ompi_datatype_copy_content_same_ddt(dtype, count, inplacebuf, (char*)sbuf);
+        if (ret < 0) { line = __LINE__; goto error_hndl; }
+    }
 
-    coll_offloaded_allreduce_chain_fanout = ompi_coll_offloaded_init_chain_fanout; /* get system wide default */
-    mca_param_indices->chain_fanout_param_index =
-      mca_base_component_var_register(&mca_coll_offloaded_component.super.collm_version,
-                                      "allreduce_algorithm_chain_fanout",
-                                      "Fanout for chains used for allreduce algorithms. Only has meaning if algorithm is forced and supports chain topo based operation.",
-                                      MCA_BASE_VAR_TYPE_INT, NULL, 0, MCA_BASE_VAR_FLAG_SETTABLE,
-                                      OPAL_INFO_LVL_5,
-                                      MCA_BASE_VAR_SCOPE_ALL,
-                                      &coll_offloaded_allreduce_chain_fanout);
+    tmpsend = (char*) inplacebuf;
+    tmprecv = (char*) rbuf;
 
-    return (MPI_SUCCESS);
+    /* Determine nearest power of two less than or equal to size */
+    adjsize = opal_next_poweroftwo (size);
+    adjsize >>= 1;
+
+    /* Handle non-power-of-two case:
+       - Even ranks less than 2 * extra_ranks send their data to (rank + 1), and
+       sets new rank to -1.
+       - Odd ranks less than 2 * extra_ranks receive data from (rank - 1),
+       apply appropriate operation, and set new rank to rank/2
+       - Everyone else sets rank to rank - extra_ranks
+    */
+    extra_ranks = size - adjsize;
+    if (rank <  (2 * extra_ranks)) {
+        if (0 == (rank % 2)) {
+            ret = MCA_PML_CALL(send(tmpsend, count, dtype, (rank + 1),
+                                    MCA_COLL_BASE_TAG_ALLREDUCE,
+                                    MCA_PML_BASE_SEND_STANDARD, comm));
+            if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
+            newrank = -1;
+        } else {
+            ret = MCA_PML_CALL(recv(tmprecv, count, dtype, (rank - 1),
+                                    MCA_COLL_BASE_TAG_ALLREDUCE, comm,
+                                    MPI_STATUS_IGNORE));
+            if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
+            /* tmpsend = tmprecv (op) tmpsend */
+            /*
+             * TODO: replace this part with check for offloading capable function
+             * */
+            //ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
+            newrank = rank >> 1;
+        }
+    } else {
+        newrank = rank - extra_ranks;
+    }
+
+    /* Communication/Computation loop
+       - Exchange message with remote node.
+       - Perform appropriate operation taking in account order of operations:
+       result = value (op) result
+    */
+    for (distance = 0x1; distance < adjsize; distance <<=1) {
+        if (newrank < 0) break;
+        /* Determine remote node */
+        newremote = newrank ^ distance;
+        remote = (newremote < extra_ranks)?
+                 (newremote * 2 + 1):(newremote + extra_ranks);
+
+        /* Exchange the data */
+        ret = ompi_coll_offloaded_sendrecv_actual(tmpsend, count, dtype, remote,
+                                                  MCA_COLL_BASE_TAG_ALLREDUCE,
+                                                  tmprecv, count, dtype, remote,
+                                                  MCA_COLL_BASE_TAG_ALLREDUCE,
+                                                  comm, MPI_STATUS_IGNORE);
+        if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
+
+        /* Apply operation */
+        if (rank < remote) {
+            /* tmprecv = tmpsend (op) tmprecv */
+            /*
+             * TODO: replace this part with check for offloading capable function
+             * */
+            //ompi_op_reduce(op, tmpsend, tmprecv, count, dtype);
+            tmpswap = tmprecv;
+            tmprecv = tmpsend;
+            tmpsend = tmpswap;
+        } else {
+            tmpsend = tmprecv (op) tmpsend;
+            /*
+            * TODO: MARKER - op to be offloaded
+            * */
+            ompi_op_reduce(op, tmprecv, tmpsend, count, dtype);
+        }
+    }
+
+    /* Handle non-power-of-two case:
+       - Odd ranks less than 2 * extra_ranks send result from tmpsend to
+       (rank - 1)
+       - Even ranks less than 2 * extra_ranks receive result from (rank + 1)
+    */
+    if (rank < (2 * extra_ranks)) {
+        if (0 == (rank % 2)) {
+            ret = MCA_PML_CALL(recv(rbuf, count, dtype, (rank + 1),
+                                    MCA_COLL_BASE_TAG_ALLREDUCE, comm,
+                                    MPI_STATUS_IGNORE));
+            if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
+            tmpsend = (char*)rbuf;
+        } else {
+            ret = MCA_PML_CALL(send(tmpsend, count, dtype, (rank - 1),
+                                    MCA_COLL_BASE_TAG_ALLREDUCE,
+                                    MCA_PML_BASE_SEND_STANDARD, comm));
+            if (MPI_SUCCESS != ret) { line = __LINE__; goto error_hndl; }
+        }
+    }
+
+    /* Ensure that the final result is in rbuf */
+    if (tmpsend != rbuf) {
+        ret = ompi_datatype_copy_content_same_ddt(dtype, count, (char*)rbuf, tmpsend);
+        if (ret < 0) { line = __LINE__; goto error_hndl; }
+    }
+
+    if (NULL != inplacebuf_free) free(inplacebuf_free);
+    return MPI_SUCCESS;
+
+    error_hndl:
+    OPAL_OUTPUT((ompi_coll_base_framework.framework_output, "%s:%4d\tRank %d Error occurred %d\n",
+            __FILE__, line, rank, ret));
+    (void)line;  // silence compiler warning
+    if (NULL != inplacebuf_free) free(inplacebuf_free);
+    return ret;
 }
 
-int ompi_coll_offloaded_allreduce_intra_do_this(const void *sbuf, void *rbuf, int count,
-                                            struct ompi_datatype_t *dtype,
-                                            struct ompi_op_t *op,
-                                            struct ompi_communicator_t *comm,
-                                            mca_coll_base_module_t *module,
-                                            int algorithm, int faninout, int segsize)
-{
-    PRINT_DEBUG;
-    OPAL_OUTPUT((ompi_coll_offloaded_stream,"coll:offloaded:allreduce_intra_do_this algorithm %d topo fan in/out %d segsize %d",
-                 algorithm, faninout, segsize));
+int ompi_coll_offloaded_sendrecv_actual( const void* sendbuf, size_t scount,
+                                         ompi_datatype_t* sdatatype,
+                                         int dest, int stag,
+                                         void* recvbuf, size_t rcount,
+                                         ompi_datatype_t* rdatatype,
+                                         int source, int rtag,
+                                         struct ompi_communicator_t* comm,
+                                         ompi_status_public_t* status )
 
-    switch (algorithm) {
-    case (0):
-        return ompi_coll_offloaded_allreduce_intra_dec_fixed(sbuf, rbuf, count, dtype, op, comm, module);
-    case (1):
-        return ompi_coll_base_allreduce_intra_basic_linear(sbuf, rbuf, count, dtype, op, comm, module);
-    case (2):
-        return ompi_coll_base_allreduce_intra_nonoverlapping(sbuf, rbuf, count, dtype, op, comm, module);
-    case (3):
-        return ompi_coll_base_allreduce_intra_recursivedoubling(sbuf, rbuf, count, dtype, op, comm, module);
-    case (4):
-        return ompi_coll_base_allreduce_intra_ring(sbuf, rbuf, count, dtype, op, comm, module);
-    case (5):
-        return ompi_coll_base_allreduce_intra_ring_segmented(sbuf, rbuf, count, dtype, op, comm, module, segsize);
-    case (6):
-        return ompi_coll_base_allreduce_intra_redscat_allgather(sbuf, rbuf, count, dtype, op, comm, module);
-    } /* switch */
-    OPAL_OUTPUT((ompi_coll_offloaded_stream,"coll:offloaded:allreduce_intra_do_this attempt to select algorithm %d when only 0-%d is valid?",
-                 algorithm, ompi_coll_offloaded_forced_max_algorithms[ALLREDUCE]));
-    return (MPI_ERR_ARG);
+{ /* post receive first, then send, then wait... should be fast (I hope) */
+    PRINT_DEBUG;
+    int err, line = 0;
+    size_t rtypesize, stypesize;
+    ompi_request_t *req;
+    ompi_status_public_t rstatus;
+
+    /* post new irecv */
+    ompi_datatype_type_size(rdatatype, &rtypesize);
+    //Go down into Libfabric RCV
+    err = MCA_PML_CALL(irecv( recvbuf, rcount, rdatatype, source, rtag,
+                              comm, &req));
+    if (err != MPI_SUCCESS) { line = __LINE__; goto error_handler; }
+
+    /* send data to children */
+    ompi_datatype_type_size(sdatatype, &stypesize);
+
+    //Go down into Libfabric SEND
+    err = MCA_PML_CALL(send( sendbuf, scount, sdatatype, dest, stag,
+                             MCA_PML_BASE_SEND_STANDARD, comm));
+    if (err != MPI_SUCCESS) { line = __LINE__; goto error_handler; }
+
+    err = ompi_request_wait( &req, &rstatus);
+    if (err != MPI_SUCCESS) { line = __LINE__; goto error_handler; }
+
+    if (MPI_STATUS_IGNORE != status) {
+        *status = rstatus;
+    }
+
+    return (MPI_SUCCESS);
+
+    error_handler:
+    /* Error discovered during the posting of the irecv or send,
+     * and no status is available.
+     */
+    OPAL_OUTPUT ((ompi_coll_base_framework.framework_output, "%s:%d: Error %d occurred\n",
+            __FILE__, line, err));
+    (void)line;  // silence compiler warning
+    if (MPI_STATUS_IGNORE != status) {
+        status->MPI_ERROR = err;
+    }
+    return (err);
 }
 

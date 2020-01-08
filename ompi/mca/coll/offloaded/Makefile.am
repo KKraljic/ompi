@@ -22,12 +22,6 @@
 
 sources = \
         coll_offloaded.h \
-        coll_offloaded_dynamic_file.h \
-        coll_offloaded_dynamic_rules.h \
-        coll_offloaded_decision_fixed.c \
-        coll_offloaded_decision_dynamic.c \
-        coll_offloaded_dynamic_file.c \
-        coll_offloaded_dynamic_rules.c \
         coll_offloaded_component.c \
         coll_offloaded_module.c \
         coll_offloaded_allreduce.c \
